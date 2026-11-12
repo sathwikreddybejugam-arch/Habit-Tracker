@@ -1,17 +1,29 @@
 class Habit {
+  static const List<String> categories = [
+    'Health',
+    'Fitness',
+    'Study',
+    'Productivity',
+    'Personal Growth',
+    'Other',
+  ];
+
   final String id;
   final String name;
   final String frequency; // 'daily' or 'weekly'
+  final String category;
   List<DateTime> completedDates;
 
   Habit({
     required String id,
     required String name,
     required String frequency,
+    this.category = 'Other',
     List<DateTime>? completedDates,
   })  : id = id.trim(),
         name = name.trim(),
         frequency = frequency.trim().toLowerCase(),
+        category = category.trim(),
         completedDates = _normalizeDates(completedDates ?? []) {
     if (this.id.isEmpty) {
       throw ArgumentError.value(id, 'id', 'Habit ID cannot be empty.');
@@ -24,6 +36,13 @@ class Habit {
         frequency,
         'frequency',
         'Frequency must be either daily or weekly.',
+      );
+    }
+    if (!categories.contains(this.category)) {
+      throw ArgumentError.value(
+        category,
+        'category',
+        'Category must be one of: ${categories.join(', ')}.',
       );
     }
   }
@@ -102,5 +121,27 @@ class Habit {
   double completionRate(int totalDaysTracked) {
     if (totalDaysTracked <= 0) return 0;
     return (completedDates.length / totalDaysTracked).clamp(0.0, 1.0);
+  }
+
+  Map<String, Object> toJson() => {
+        'id': id,
+        'name': name,
+        'frequency': frequency,
+        'category': category,
+        'completedDates':
+            completedDates.map((date) => date.toIso8601String()).toList(),
+      };
+
+  factory Habit.fromJson(Map<String, dynamic> json) {
+    final rawDates = json['completedDates'] as List<dynamic>? ?? const [];
+    return Habit(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      frequency: json['frequency'] as String,
+      category: json['category'] as String? ?? 'Other',
+      completedDates: rawDates
+          .map((date) => DateTime.parse(date as String))
+          .toList(),
+    );
   }
 }

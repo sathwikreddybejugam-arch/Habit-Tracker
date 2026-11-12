@@ -1,55 +1,56 @@
 # Habit Tracker
 
-A simple Flutter habit tracker app. Add habits, mark them done each day,
-track streaks, and view a 7-day mini calendar plus a stats screen. Firebase
-Authentication protects access to the tracker using email and password.
+A Flutter app for creating habits, tracking daily progress, and keeping a streak.
 
-## What's included
+## Features
 
-- Email/password sign up, sign in, password reset, and sign out
-- An authentication gate that shows the tracker only for a signed-in user
-- Habits remain in memory, as before; they are not synced or persisted
+- Create and edit daily or weekly habits.
+- Organize habits into Health, Fitness, Study, Productivity, Personal Growth, and Other.
+- Mark a habit done today and view its recent seven-day history.
+- View current and longest streaks and a summary statistics screen.
+- Delete habits with an undo action.
+- Save habits and completion history locally between app launches.
 
-## Firebase setup
+Habits are stored on the current device with `shared_preferences`. They are not
+cloud-synced or separated by user account.
 
-Firebase project credentials are not included in this repository. Each app
-configuration is project-specific, so create or select your own Firebase
-project before running the app.
+## Run locally
 
-1. Install the Firebase CLI and sign in:
-   firebase login
-2. Install FlutterFire CLI:
-   dart pub global activate flutterfire_cli
-3. From the project root, generate the Firebase app configuration:
-   flutterfire configure
-   Select your Firebase project and the platforms you intend to run (Android,
-   iOS, Web, etc.). This replaces the safe placeholder at
-   lib/firebase_options.dart with the generated DefaultFirebaseOptions.
-   The generated file contains public app identifiers, not server credentials.
-4. In the Firebase Console, open Authentication → Sign-in method and enable
-   Email/Password.
-5. Fetch packages and run the app:
-   flutter pub get
-   flutter run
+This repository contains Dart source and tests, but no generated Android, iOS,
+or web platform folders. From the project root:
 
-The current repository has Dart source only, without generated android/,
-ios/, or web/ platform folders. If needed, create them first with
-flutter create ., then run flutterfire configure again.
+```bash
+flutter create .
+flutter pub get
+flutter run
+```
 
-Do not add service account keys, private keys, or other server credentials to
-the Flutter client. Firebase client configuration is not a security boundary;
-use Firebase Security Rules for any future user data stored in Firebase.
+Run the available tests with:
+
+```bash
+flutter test
+```
+
+## Firebase status
+
+Firebase dependencies, a small authentication service, and a safe placeholder
+configuration are present as groundwork. The app does not yet initialize
+Firebase or show a sign-in flow. No Firebase project configuration is needed
+to use the current habit tracker features. Do not commit service-account keys
+or other private credentials.
 
 ## Project structure
 
-- lib/main.dart
-- lib/firebase_options.dart
-- lib/models/habit.dart
-- lib/services/auth_service.dart
-- lib/screens/auth_screen.dart
-- lib/widgets/
-
-## Run
-
-    flutter pub get
-    flutter run
+```text
+lib/
+├── main.dart
+├── firebase_options.dart       # Safe placeholder; not used by the app yet
+├── models/habit.dart
+├── services/
+│   ├── auth_service.dart       # Firebase authentication wrapper
+│   └── habit_storage.dart      # Local habit persistence
+└── widgets/
+    ├── add_habit_dialog.dart
+    ├── habit_card.dart
+    └── stats_view.dart
+```

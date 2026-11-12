@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'models/habit.dart';
+import 'services/habit_storage.dart';
 import 'widgets/add_habit_dialog.dart';
 import 'widgets/habit_card.dart';
 import 'widgets/stats_view.dart';
@@ -30,7 +33,42 @@ class HabitHomePage extends StatefulWidget {
 
 class _HabitHomePageState extends State<HabitHomePage> {
   final List<Habit> habits = [];
+  final HabitStorage _storage = HabitStorage();
+  Future<void> _saveQueue = Future<void>.value();
   int _selectedTab = 0;
+  String _selectedCategory = 'All';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHabits();
+  }
+
+  Future<void> _loadHabits() async {
+    try {
+      final savedHabits = await _storage.loadHabits();
+      if (!mounted) return;
+      setState(() {
+        habits
+          ..clear()
+          ..addAll(savedHabits);
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showMessage('Saved habits could not be loaded.');
+    }
+  }
+
+  void _saveHabits() {
+    final snapshot = List<Habit>.from(habits);
+    _saveQueue = _saveQueue
+        .then((_) => _storage.saveHabits(snapshot))
+        .catchError((_) => _showMessage('Habit changes could not be saved.'));
+    unawaited(_saveQueue);
+  }
 
   void _showMessage(String message) {
     if (!mounted) return;
@@ -52,6 +90,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
       }
 
       setState(() => habits.add(habit));
+      _saveHabits();
       _showMessage('Habit added successfully.');
     } on ArgumentError catch (error) {
       _showMessage('Unable to add habit: ${error.message}');
@@ -78,6 +117,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
     }
 
     setState(() => habits[index] = updated);
+    _saveHabits();
     _showMessage('Habit updated successfully.');
   }
 
@@ -86,13 +126,14 @@ class _HabitHomePageState extends State<HabitHomePage> {
     if (index == -1) return;
 
     setState(() => habits.removeAt(index));
+    _saveHabits();
     if (!mounted) return;
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('" + "'${habit.name}'" + " deleted.'),
+          content: Text("'${habit.name}' deleted."),
           duration: const Duration(seconds: 5),
           action: SnackBarAction(
             label: 'UNDO',
@@ -104,6 +145,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
                 final restoreIndex = index.clamp(0, habits.length);
                 habits.insert(restoreIndex, habit);
               });
+              _saveHabits();
             },
           ),
         ),
@@ -112,6 +154,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
 
   void _toggleToday(Habit habit) {
     setState(() => habit.toggleToday());
+    _saveHabits();
   }
 
   void _showAddHabitDialog() {
@@ -133,23 +176,62 @@ class _HabitHomePageState extends State<HabitHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final visibleHabits = _selectedCategory == 'All'
+        ? habits
+        : habits.where((habit) => habit.category == _selectedCategory).toList();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Habit Tracker')),
-      body: _selectedTab == 0
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _selectedTab == 0
           ? (habits.isEmpty
               ? const Center(child: Text('No habits yet. Tap + to add one.'))
               : ListView(
-                  children: habits
-                      .map((habit) => HabitCard(
-                            habit: habit,
-                            onToggleToday: () => _toggleToday(habit),
-                            onDelete: () => _deleteHabit(habit),
-                            onEdit: () => _showEditHabitDialog(habit),
-                          ))
-                      .toList(),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: DropdownButtonFormField<String>(
+                        key: const ValueKey('habit-category-filter'),
+                        value: _selectedCategory,
+                        decoration: const InputDecoration(
+                          labelText: 'Show category',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: 'All',
+                            child: Text('All categories'),
+                          ),
+                          ...Habit.categories.map((category) =>
+                              DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              )),
+                        ],
+                        onChanged: (category) => setState(() {
+                          _selectedCategory = category ?? 'All';
+                        }),
+                      ),
+                    ),
+                    if (visibleHabits.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(
+                          child: Text('No habits in this category yet.'),
+                        ),
+                      ),
+                    ...visibleHabits.map((habit) => HabitCard(
+                          habit: habit,
+                          onToggleToday: () => _toggleToday(habit),
+                          onDelete: () => _deleteHabit(habit),
+                          onEdit: () => _showEditHabitDialog(habit),
+                        )),
+                  ],
                 ))
           : StatsView(habits: habits),
-      floatingActionButton: _selectedTab == 0
+      floatingActionButton: !_isLoading && _selectedTab == 0
           ? FloatingActionButton(
               onPressed: _showAddHabitDialog,
               child: const Icon(Icons.add),

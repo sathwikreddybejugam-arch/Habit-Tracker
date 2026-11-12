@@ -2,6 +2,43 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:habit_tracker/models/habit.dart';
 
 void main() {
+  group('Habit categories', () {
+    test('defaults existing habits to Other', () {
+      final habit = Habit(
+        id: 'test-habit',
+        name: 'Read',
+        frequency: 'daily',
+      );
+
+      expect(habit.category, 'Other');
+    });
+
+    test('accepts each supported category', () {
+      for (final category in Habit.categories) {
+        final habit = Habit(
+          id: 'test-habit',
+          name: 'Read',
+          frequency: 'daily',
+          category: category,
+        );
+
+        expect(habit.category, category);
+      }
+    });
+
+    test('rejects unsupported categories', () {
+      expect(
+        () => Habit(
+          id: 'test-habit',
+          name: 'Read',
+          frequency: 'daily',
+          category: 'Unlisted',
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
+
   group('Habit streak calculations', () {
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day);
