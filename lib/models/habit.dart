@@ -31,8 +31,16 @@ class Habit {
   }
 
   int get currentStreak {
-    int streak = 0;
-    DateTime day = DateTime.now();
+    // A streak remains active until the end of the day after the last
+    // completion, so an unfinished habit today can retain yesterday's run.
+    final today = DateTime.now();
+    var day = DateTime(today.year, today.month, today.day);
+
+    if (!isDoneOn(day)) {
+      day = day.subtract(const Duration(days: 1));
+    }
+
+    var streak = 0;
     while (isDoneOn(day)) {
       streak++;
       day = day.subtract(const Duration(days: 1));
