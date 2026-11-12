@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
 import 'models/habit.dart';
 import 'screens/auth_screen.dart';
+import 'services/habit_backup.dart';
 import 'services/auth_service.dart';
 import 'services/habit_storage.dart';
 import 'widgets/add_habit_dialog.dart';
@@ -140,6 +142,7 @@ class HabitHomePage extends StatefulWidget {
 
 class _HabitHomePageState extends State<HabitHomePage> {
   final List<Habit> habits = [];
+  final HabitBackup _backup = HabitBackup();
   final TextEditingController _searchController = TextEditingController();
   late final HabitStorage _storage =
       HabitStorage(accountId: widget.user.uid);
@@ -289,6 +292,60 @@ class _HabitHomePageState extends State<HabitHomePage> {
     }
   }
 
+  Future<void> _copyBackup() async {
+    await Clipboard.setData(ClipboardData(text: _backup.encode(habits)));
+    _showMessage('Backup JSON copied to the clipboard.');
+  }
+
+  Future<void> _importBackup() async {
+    final controller = TextEditingController();
+    final source = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Import backup'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: TextField(
+            controller: controller,
+            minLines: 5,
+            maxLines: 12,
+            decoration: const InputDecoration(
+              labelText: 'Backup JSON',
+              hintText: 'Paste a Habit Tracker backup',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Merge backup'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (!mounted || source == null || source.trim().isEmpty) return;
+
+    try {
+      final incoming = _backup.decode(source);
+      final merged = _backup.merge(habits, incoming);
+      setState(() {
+        habits
+          ..clear()
+          ..addAll(merged);
+      });
+      _saveHabits();
+      _showMessage('Imported ${incoming.length} habits. Existing habits were kept.');
+    } on FormatException catch (error) {
+      _showMessage(error.message);
+    }
+  }
+
   Widget _buildHabitsTab() {
     if (habits.isEmpty) {
       return const Center(child: Text('No habits yet. Tap + to add one.'));
@@ -399,6 +456,20 @@ class _HabitHomePageState extends State<HabitHomePage> {
       appBar: AppBar(
         title: const Text('Habit Tracker'),
         actions: [
+          PopupMenuButton<String>(
+            tooltip: 'Backup and restore',
+            onSelected: (action) {
+              if (action == 'export') {
+                _copyBackup();
+              } else {
+                _importBackup();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'export', child: Text('Copy backup JSON')),
+              PopupMenuItem(value: 'import', child: Text('Import backup JSON')),
+            ],
+          ),
           IconButton(
             tooltip: 'Sign out ${widget.user.email ?? ''}',
             onPressed: _signOut,
