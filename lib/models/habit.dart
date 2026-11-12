@@ -12,6 +12,7 @@ class Habit {
   final String name;
   final String frequency; // 'daily' or 'weekly'
   final String category;
+  final int weeklyTarget;
   List<DateTime> completedDates;
 
   Habit({
@@ -19,11 +20,13 @@ class Habit {
     required String name,
     required String frequency,
     this.category = 'Other',
+    int? weeklyTarget,
     List<DateTime>? completedDates,
   })  : id = id.trim(),
         name = name.trim(),
         frequency = frequency.trim().toLowerCase(),
         category = category.trim(),
+        weeklyTarget = weeklyTarget ?? 1,
         completedDates = _normalizeDates(completedDates ?? []) {
     if (this.id.isEmpty) {
       throw ArgumentError.value(id, 'id', 'Habit ID cannot be empty.');
@@ -43,6 +46,13 @@ class Habit {
         category,
         'category',
         'Category must be one of: ${categories.join(', ')}.',
+      );
+    }
+    if (this.weeklyTarget < 1 || this.weeklyTarget > 7) {
+      throw ArgumentError.value(
+        this.weeklyTarget,
+        'weeklyTarget',
+        'Weekly target must be between 1 and 7.',
       );
     }
   }
@@ -65,6 +75,14 @@ class Habit {
 
   bool get isDoneToday => isDoneOn(DateTime.now());
 
+  int completionsThisWeek([DateTime? date]) {
+    final start = _weekStart(date ?? DateTime.now());
+    final end = start.add(const Duration(days: 7));
+    return completedDates
+        .where((completion) => !completion.isBefore(start) && completion.isBefore(end))
+        .length;
+  }
+
   void toggleToday() {
     final today = DateTime.now();
     if (isDoneToday) {
@@ -78,6 +96,19 @@ class Habit {
   }
 
   int get currentStreak {
+    if (frequency == 'weekly') {
+      var week = _weekStart(DateTime.now());
+      if (_completionsInWeek(week) < weeklyTarget) {
+        week = week.subtract(const Duration(days: 7));
+      }
+      var weeks = 0;
+      while (_completionsInWeek(week) >= weeklyTarget) {
+        weeks++;
+        week = week.subtract(const Duration(days: 7));
+      }
+      return weeks;
+    }
+
     // A streak remains active until the end of the day after the last
     // completion, so an unfinished habit today can retain yesterday's run.
     final today = DateTime.now();
@@ -97,6 +128,33 @@ class Habit {
 
   int get longestStreak {
     if (completedDates.isEmpty) return 0;
+    if (frequency == 'weekly') {
+      final completionsByWeek = <DateTime, int>{};
+      for (final completion in completedDates) {
+        final week = _weekStart(completion);
+        completionsByWeek.update(week, (count) => count + 1, ifAbsent: () => 1);
+      }
+      final weeks = completionsByWeek.keys.toList()
+        ..sort((a, b) => a.compareTo(b));
+      var longest = 0;
+      var current = 0;
+      DateTime? previous;
+      for (final week in weeks) {
+        if (completionsByWeek[week]! < weeklyTarget) {
+          current = 0;
+        } else {
+          current = previous != null &&
+                  week.difference(previous).inDays == 7 &&
+                  completionsByWeek[previous]! >= weeklyTarget
+              ? current + 1
+              : 1;
+          if (current > longest) longest = current;
+        }
+        previous = week;
+      }
+      return longest;
+    }
+
     final sorted = List<DateTime>.from(completedDates)
       ..sort((a, b) => a.compareTo(b));
     int longest = 1;
@@ -123,11 +181,25 @@ class Habit {
     return (completedDates.length / totalDaysTracked).clamp(0.0, 1.0);
   }
 
+  int _completionsInWeek(DateTime weekStart) {
+    final weekEnd = weekStart.add(const Duration(days: 7));
+    return completedDates
+        .where((completion) =>
+            !completion.isBefore(weekStart) && completion.isBefore(weekEnd))
+        .length;
+  }
+
+  static DateTime _weekStart(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    return day.subtract(Duration(days: day.weekday - DateTime.monday));
+  }
+
   Map<String, Object> toJson() => {
         'id': id,
         'name': name,
         'frequency': frequency,
         'category': category,
+        'weeklyTarget': weeklyTarget,
         'completedDates':
             completedDates.map((date) => date.toIso8601String()).toList(),
       };
@@ -139,6 +211,7 @@ class Habit {
       name: json['name'] as String,
       frequency: json['frequency'] as String,
       category: json['category'] as String? ?? 'Other',
+      weeklyTarget: json['weeklyTarget'] as int? ?? 1,
       completedDates: rawDates
           .map((date) => DateTime.parse(date as String))
           .toList(),

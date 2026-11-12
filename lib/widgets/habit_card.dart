@@ -35,7 +35,8 @@ class HabitCard extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-                Text('🔥 ${habit.currentStreak}'),
+                Text(
+                    '🔥 ${habit.currentStreak}${habit.frequency == 'weekly' ? 'w' : ''}'),
                 IconButton(
                   tooltip: 'Edit habit',
                   icon: const Icon(Icons.edit_outlined),
@@ -54,6 +55,9 @@ class HabitCard extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
+            Text(habit.frequency == 'weekly'
+                ? '${habit.category} · ${habit.completionsThisWeek()} / ${habit.weeklyTarget} this week'
+                : '${habit.category} · Daily'),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

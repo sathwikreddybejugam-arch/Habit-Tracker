@@ -20,6 +20,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
   late final TextEditingController _nameController;
   late String _frequency;
   late String _category;
+  late int _weeklyTarget;
 
   bool get _isEditing => widget.initialHabit != null;
 
@@ -31,6 +32,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
     );
     _frequency = widget.initialHabit?.frequency ?? 'daily';
     _category = widget.initialHabit?.category ?? 'Other';
+    _weeklyTarget = widget.initialHabit?.weeklyTarget ?? 1;
   }
 
   @override
@@ -48,6 +50,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
       name: _nameController.text.trim(),
       frequency: _frequency,
       category: _category,
+      weeklyTarget: _weeklyTarget,
       completedDates: original == null
           ? []
           : List<DateTime>.from(original.completedDates),
@@ -98,6 +101,24 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
               onChanged: (val) =>
                   setState(() => _frequency = val ?? 'daily'),
             ),
+            if (_frequency == 'weekly') ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                value: _weeklyTarget,
+                decoration: const InputDecoration(
+                  labelText: 'Weekly goal',
+                  border: OutlineInputBorder(),
+                ),
+                items: List.generate(7, (index) => index + 1)
+                    .map((count) => DropdownMenuItem(
+                          value: count,
+                          child: Text('$count ${count == 1 ? 'day' : 'days'} per week'),
+                        ))
+                    .toList(),
+                onChanged: (value) =>
+                    setState(() => _weeklyTarget = value ?? 1),
+              ),
+            ],
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: _category,
