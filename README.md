@@ -1,7 +1,8 @@
 # Habit Tracker
 
 A simple Flutter habit tracker app. Add habits, mark them done each day,
-track streaks, and view a 7-day mini calendar plus a stats screen.
+track streaks, and view a 7-day mini calendar plus a stats screen. Habits and
+their completion history are saved locally between app launches.
 
 ## What's included
 
@@ -68,7 +69,6 @@ git push -u origin main
 
 ## Next steps / ideas
 
-- Persist habits with `shared_preferences` or `sqflite` so data survives restarts
 - Add habit colors/icons
 - Weekly view instead of just 7-day
 - Notifications/reminders

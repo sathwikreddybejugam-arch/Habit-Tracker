@@ -122,4 +122,26 @@ class Habit {
     if (totalDaysTracked <= 0) return 0;
     return (completedDates.length / totalDaysTracked).clamp(0.0, 1.0);
   }
+
+  Map<String, Object> toJson() => {
+        'id': id,
+        'name': name,
+        'frequency': frequency,
+        'category': category,
+        'completedDates':
+            completedDates.map((date) => date.toIso8601String()).toList(),
+      };
+
+  factory Habit.fromJson(Map<String, dynamic> json) {
+    final rawDates = json['completedDates'] as List<dynamic>? ?? const [];
+    return Habit(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      frequency: json['frequency'] as String,
+      category: json['category'] as String? ?? 'Other',
+      completedDates: rawDates
+          .map((date) => DateTime.parse(date as String))
+          .toList(),
+    );
+  }
 }
