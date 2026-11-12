@@ -82,7 +82,32 @@ class _HabitHomePageState extends State<HabitHomePage> {
   }
 
   void _deleteHabit(Habit habit) {
-    setState(() => habits.remove(habit));
+    final index = habits.indexOf(habit);
+    if (index == -1) return;
+
+    setState(() => habits.removeAt(index));
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('" + "'${habit.name}'" + " deleted.'),
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'UNDO',
+            onPressed: () {
+              if (!mounted || habits.any((item) => item.id == habit.id)) {
+                return;
+              }
+              setState(() {
+                final restoreIndex = index.clamp(0, habits.length);
+                habits.insert(restoreIndex, habit);
+              });
+            },
+          ),
+        ),
+      );
   }
 
   void _toggleToday(Habit habit) {
