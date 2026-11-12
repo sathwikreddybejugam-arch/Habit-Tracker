@@ -13,9 +13,7 @@ class StatsView extends StatelessWidget {
     }
 
     final completedToday = habits.where((habit) => habit.isDoneToday).length;
-    final bestCurrentStreak = habits
-        .map((habit) => habit.currentStreak)
-        .fold<int>(0, (best, streak) => streak > best ? streak : best);
+    final archivedCount = habits.where((habit) => habit.isArchived).length;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -29,8 +27,7 @@ class StatsView extends StatelessWidget {
                 _SummaryMetric(label: 'Habits', value: '${habits.length}'),
                 _SummaryMetric(
                     label: 'Done today', value: '$completedToday'),
-                _SummaryMetric(
-                    label: 'Best streak', value: '$bestCurrentStreak'),
+                _SummaryMetric(label: 'Archived', value: '$archivedCount'),
               ],
             ),
           ),
