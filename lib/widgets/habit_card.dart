@@ -3,9 +3,10 @@ import '../models/habit.dart';
 
 class HabitCard extends StatelessWidget {
   final Habit habit;
-  final VoidCallback onToggleToday;
+  final VoidCallback? onToggleToday;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
+  final VoidCallback onArchive;
 
   const HabitCard({
     super.key,
@@ -13,6 +14,7 @@ class HabitCard extends StatelessWidget {
     required this.onToggleToday,
     required this.onDelete,
     required this.onEdit,
+    required this.onArchive,
   });
 
   @override
@@ -35,7 +37,8 @@ class HabitCard extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-                Text('🔥 ${habit.currentStreak}'),
+                Text(
+                    '🔥 ${habit.currentStreak}${habit.frequency == 'weekly' ? 'w' : ''}'),
                 IconButton(
                   tooltip: 'Edit habit',
                   icon: const Icon(Icons.edit_outlined),
@@ -46,6 +49,13 @@ class HabitCard extends StatelessWidget {
                   icon: const Icon(Icons.delete_outline),
                   onPressed: onDelete,
                 ),
+                IconButton(
+                  tooltip: habit.isArchived ? 'Restore habit' : 'Archive habit',
+                  icon: Icon(habit.isArchived
+                      ? Icons.unarchive_outlined
+                      : Icons.archive_outlined),
+                  onPressed: onArchive,
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -54,6 +64,14 @@ class HabitCard extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
+            Text(habit.frequency == 'weekly'
+                ? '${habit.category} · ${habit.completionsThisWeek()} / ${habit.weeklyTarget} this week'
+                : '${habit.category} · Daily'),
+            if (habit.description.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(habit.description,
+                  maxLines: 2, overflow: TextOverflow.ellipsis),
+            ],
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -64,12 +82,21 @@ class HabitCard extends StatelessWidget {
                     Text(_weekdayLabel(date.weekday),
                         style: const TextStyle(fontSize: 10)),
                     const SizedBox(height: 4),
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: done ? Colors.green : Colors.grey[300],
-                        shape: BoxShape.circle,
+                    Tooltip(
+                      message:
+                          '${MaterialLocalizations.of(context).formatMediumDate(date)}: ${done ? 'complete' : 'incomplete'}',
+                      child: Semantics(
+                        container: true,
+                        label:
+                            '${_weekdayLabel(date.weekday)} ${date.day}: ${done ? 'complete' : 'incomplete'}',
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: done ? Colors.green : Colors.grey[300],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -95,7 +122,7 @@ class HabitCard extends StatelessWidget {
   }
 
   String _weekdayLabel(int weekday) {
-    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return labels[weekday - 1];
   }
 }

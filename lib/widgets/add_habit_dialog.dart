@@ -18,8 +18,10 @@ class AddHabitDialog extends StatefulWidget {
 class _AddHabitDialogState extends State<AddHabitDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
   late String _frequency;
   late String _category;
+  late int _weeklyTarget;
 
   bool get _isEditing => widget.initialHabit != null;
 
@@ -29,13 +31,18 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
     _nameController = TextEditingController(
       text: widget.initialHabit?.name ?? '',
     );
+    _descriptionController = TextEditingController(
+      text: widget.initialHabit?.description ?? '',
+    );
     _frequency = widget.initialHabit?.frequency ?? 'daily';
     _category = widget.initialHabit?.category ?? 'Other';
+    _weeklyTarget = widget.initialHabit?.weeklyTarget ?? 1;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -46,8 +53,10 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
     widget.onAdd(Habit(
       id: original?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
+      description: _descriptionController.text.trim(),
       frequency: _frequency,
       category: _category,
+      weeklyTarget: _weeklyTarget,
       completedDates: original == null
           ? []
           : List<DateTime>.from(original.completedDates),
@@ -59,11 +68,12 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(_isEditing ? 'Edit Habit' : 'New Habit'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             TextFormField(
               controller: _nameController,
               autofocus: true,
@@ -84,6 +94,16 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
               },
               onFieldSubmitted: (_) => _submit(),
             ),
+            TextFormField(
+              controller: _descriptionController,
+              maxLength: 180,
+              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Notes (optional)',
+                hintText: 'Add a reason or helpful detail',
+              ),
+            ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: _frequency,
@@ -98,6 +118,24 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
               onChanged: (val) =>
                   setState(() => _frequency = val ?? 'daily'),
             ),
+            if (_frequency == 'weekly') ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                value: _weeklyTarget,
+                decoration: const InputDecoration(
+                  labelText: 'Weekly goal',
+                  border: OutlineInputBorder(),
+                ),
+                items: List.generate(7, (index) => index + 1)
+                    .map((count) => DropdownMenuItem(
+                          value: count,
+                          child: Text('$count ${count == 1 ? 'day' : 'days'} per week'),
+                        ))
+                    .toList(),
+                onChanged: (value) =>
+                    setState(() => _weeklyTarget = value ?? 1),
+              ),
+            ],
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: _category,
@@ -114,7 +152,8 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
               onChanged: (value) =>
                   setState(() => _category = value ?? 'Other'),
             ),
-          ],
+            ],
+          ),
         ),
       ),
       actions: [

@@ -39,17 +39,13 @@ void main() {
     expect(find.text('Read'), findsOneWidget);
     expect(find.text('Run'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('habit-category-filter')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Study').last);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Study'));
     await tester.pumpAndSettle();
 
     expect(find.text('Read'), findsOneWidget);
     expect(find.text('Run'), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('habit-category-filter')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('All categories'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'All'));
     await tester.pumpAndSettle();
 
     expect(find.text('Read'), findsOneWidget);
@@ -62,11 +58,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('habit-category-filter')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Health').last);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Health'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No habits in this category yet.'), findsOneWidget);
+    expect(find.text('No habits in Health yet.'), findsOneWidget);
   });
 }
