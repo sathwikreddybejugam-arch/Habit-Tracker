@@ -11,6 +11,7 @@ import 'services/auth_service.dart';
 import 'services/habit_storage.dart';
 import 'widgets/add_habit_dialog.dart';
 import 'widgets/habit_card.dart';
+import 'widgets/history_view.dart';
 import 'widgets/stats_view.dart';
 
 Future<void> main() async {
@@ -409,7 +410,9 @@ class _HabitHomePageState extends State<HabitHomePage> {
           ? const Center(child: CircularProgressIndicator())
           : _selectedTab == 0
               ? _buildHabitsTab()
-              : StatsView(habits: habits),
+              : _selectedTab == 1
+                  ? StatsView(habits: habits)
+                  : HistoryView(habits: habits),
       floatingActionButton: !_isLoading && _selectedTab == 0
           ? FloatingActionButton(
               onPressed: _showAddHabitDialog,
@@ -424,6 +427,8 @@ class _HabitHomePageState extends State<HabitHomePage> {
               icon: Icon(Icons.checklist), label: 'Habits'),
           BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart), label: 'Stats'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month), label: 'History'),
         ],
       ),
     );
