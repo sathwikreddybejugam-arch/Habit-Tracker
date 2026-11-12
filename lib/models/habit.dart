@@ -5,11 +5,39 @@ class Habit {
   List<DateTime> completedDates;
 
   Habit({
-    required this.id,
-    required this.name,
-    required this.frequency,
+    required String id,
+    required String name,
+    required String frequency,
     List<DateTime>? completedDates,
-  }) : completedDates = completedDates ?? [];
+  })  : id = id.trim(),
+        name = name.trim(),
+        frequency = frequency.trim().toLowerCase(),
+        completedDates = _normalizeDates(completedDates ?? []) {
+    if (this.id.isEmpty) {
+      throw ArgumentError.value(id, 'id', 'Habit ID cannot be empty.');
+    }
+    if (this.name.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'Habit name cannot be empty.');
+    }
+    if (this.frequency != 'daily' && this.frequency != 'weekly') {
+      throw ArgumentError.value(
+        frequency,
+        'frequency',
+        'Frequency must be either daily or weekly.',
+      );
+    }
+  }
+
+  static List<DateTime> _normalizeDates(List<DateTime> dates) {
+    final uniqueDays = <String, DateTime>{};
+    for (final date in dates) {
+      final normalized = DateTime(date.year, date.month, date.day);
+      final key = '${normalized.year}-${normalized.month}-${normalized.day}';
+      uniqueDays[key] = normalized;
+    }
+    return uniqueDays.values.toList()
+      ..sort((a, b) => a.compareTo(b));
+  }
 
   bool isDoneOn(DateTime date) {
     return completedDates.any((d) =>
@@ -55,7 +83,12 @@ class Habit {
     int longest = 1;
     int current = 1;
     for (int i = 1; i < sorted.length; i++) {
-      final diff = sorted[i].difference(sorted[i - 1]).inDays;
+      final previous = sorted[i - 1];
+      final next = sorted[i];
+      final previousUtc = DateTime.utc(
+        previous.year, previous.month, previous.day);
+      final nextUtc = DateTime.utc(next.year, next.month, next.day);
+      final diff = nextUtc.difference(previousUtc).inDays;
       if (diff == 1) {
         current++;
         longest = longest > current ? longest : current;
@@ -68,6 +101,6 @@ class Habit {
 
   double completionRate(int totalDaysTracked) {
     if (totalDaysTracked <= 0) return 0;
-    return completedDates.length / totalDaysTracked;
+    return (completedDates.length / totalDaysTracked).clamp(0.0, 1.0);
   }
 }

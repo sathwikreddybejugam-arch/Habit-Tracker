@@ -32,8 +32,32 @@ class _HabitHomePageState extends State<HabitHomePage> {
   final List<Habit> habits = [];
   int _selectedTab = 0;
 
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   void _addHabit(Habit habit) {
-    setState(() => habits.add(habit));
+    try {
+      final normalizedName = habit.name.toLowerCase();
+      final alreadyExists = habits.any(
+        (existing) => existing.name.toLowerCase() == normalizedName,
+      );
+
+      if (alreadyExists) {
+        _showMessage('A habit with this name already exists.');
+        return;
+      }
+
+      setState(() => habits.add(habit));
+      _showMessage('Habit added successfully.');
+    } on ArgumentError catch (error) {
+      _showMessage('Unable to add habit: ${error.message}');
+    } catch (_) {
+      _showMessage('Something went wrong while adding the habit.');
+    }
   }
 
   void _deleteHabit(Habit habit) {
