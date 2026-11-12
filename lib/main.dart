@@ -170,17 +170,19 @@ class AuthGate extends StatelessWidget {
   }
 }
 
+void _noThemeChange() {}
+
 class HabitHomePage extends StatefulWidget {
   const HabitHomePage({
     super.key,
-    required this.user,
-    required this.authService,
-    required this.isDarkMode,
-    required this.onToggleTheme,
+    this.user,
+    this.authService,
+    this.isDarkMode = false,
+    this.onToggleTheme = _noThemeChange,
   });
 
-  final User user;
-  final AuthService authService;
+  final User? user;
+  final AuthService? authService;
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
 
@@ -193,7 +195,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
   final HabitBackup _backup = HabitBackup();
   final TextEditingController _searchController = TextEditingController();
   late final HabitStorage _storage =
-      HabitStorage(accountId: widget.user.uid);
+      HabitStorage(accountId: widget.user?.uid);
   Future<void> _saveQueue = Future<void>.value();
   int _selectedTab = 0;
   String _selectedCategory = 'All';
@@ -354,8 +356,10 @@ class _HabitHomePageState extends State<HabitHomePage> {
   }
 
   Future<void> _signOut() async {
+    final authService = widget.authService;
+    if (authService == null) return;
     try {
-      await widget.authService.signOut();
+      await authService.signOut();
     } on FirebaseAuthException {
       _showMessage('Unable to sign out. Please try again.');
     }
@@ -599,11 +603,12 @@ class _HabitHomePageState extends State<HabitHomePage> {
               PopupMenuItem(value: 'import', child: Text('Import backup JSON')),
             ],
           ),
-          IconButton(
-            tooltip: 'Sign out ${widget.user.email ?? ''}',
-            onPressed: _signOut,
-            icon: const Icon(Icons.logout),
-          ),
+          if (widget.user != null)
+            IconButton(
+              tooltip: 'Sign out ${widget.user?.email ?? ''}',
+              onPressed: _signOut,
+              icon: const Icon(Icons.logout),
+            ),
         ],
       ),
       body: Center(
