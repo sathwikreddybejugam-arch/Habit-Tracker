@@ -10,6 +10,7 @@ class Habit {
 
   final String id;
   final String name;
+  final String description;
   final String frequency; // 'daily' or 'weekly'
   final String category;
   final int weeklyTarget;
@@ -19,6 +20,7 @@ class Habit {
   Habit({
     required String id,
     required String name,
+    this.description = '',
     required String frequency,
     this.category = 'Other',
     int? weeklyTarget,
@@ -26,6 +28,7 @@ class Habit {
     List<DateTime>? completedDates,
   })  : id = id.trim(),
         name = name.trim(),
+        description = description.trim(),
         frequency = frequency.trim().toLowerCase(),
         category = category.trim(),
         weeklyTarget = weeklyTarget ?? 1,
@@ -226,6 +229,7 @@ class Habit {
   Map<String, Object> toJson() => {
         'id': id,
         'name': name,
+        'description': description,
         'frequency': frequency,
         'category': category,
         'weeklyTarget': weeklyTarget,
@@ -239,6 +243,7 @@ class Habit {
     return Habit(
       id: json['id'] as String,
       name: json['name'] as String,
+      description: json['description'] as String? ?? '',
       frequency: json['frequency'] as String,
       category: json['category'] as String? ?? 'Other',
       weeklyTarget: json['weeklyTarget'] as int? ?? 1,

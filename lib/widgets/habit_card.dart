@@ -67,6 +67,11 @@ class HabitCard extends StatelessWidget {
             Text(habit.frequency == 'weekly'
                 ? '${habit.category} · ${habit.completionsThisWeek()} / ${habit.weeklyTarget} this week'
                 : '${habit.category} · Daily'),
+            if (habit.description.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(habit.description,
+                  maxLines: 2, overflow: TextOverflow.ellipsis),
+            ],
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

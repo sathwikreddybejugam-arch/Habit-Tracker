@@ -18,6 +18,7 @@ class AddHabitDialog extends StatefulWidget {
 class _AddHabitDialogState extends State<AddHabitDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
   late String _frequency;
   late String _category;
   late int _weeklyTarget;
@@ -30,6 +31,9 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
     _nameController = TextEditingController(
       text: widget.initialHabit?.name ?? '',
     );
+    _descriptionController = TextEditingController(
+      text: widget.initialHabit?.description ?? '',
+    );
     _frequency = widget.initialHabit?.frequency ?? 'daily';
     _category = widget.initialHabit?.category ?? 'Other';
     _weeklyTarget = widget.initialHabit?.weeklyTarget ?? 1;
@@ -38,6 +42,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
   @override
   void dispose() {
     _nameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -48,6 +53,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
     widget.onAdd(Habit(
       id: original?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
+      description: _descriptionController.text.trim(),
       frequency: _frequency,
       category: _category,
       weeklyTarget: _weeklyTarget,
@@ -86,6 +92,16 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
                 return null;
               },
               onFieldSubmitted: (_) => _submit(),
+            ),
+            TextFormField(
+              controller: _descriptionController,
+              maxLength: 180,
+              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Notes (optional)',
+                hintText: 'Add a reason or helpful detail',
+              ),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
