@@ -94,7 +94,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
                 return;
               }
               setState(() {
-                final restoreIndex = index.clamp(0, habits.length);
+                final restoreIndex = index.clamp(0, habits.length).toInt();
                 habits.insert(restoreIndex, habit);
               });
             },
