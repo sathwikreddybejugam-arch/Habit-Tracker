@@ -73,7 +73,8 @@ lib/
 
 test/
 ├── models/habit_test.dart
-└── services/habit_storage_test.dart
+├── services/habit_storage_test.dart
+└── widgets/habit_category_filter_test.dart
 ```
 
 The repository contains Dart source only; generated `android/`, `ios/`, and `web/` platform folders are not checked in. The app keeps its screens and state in Flutter widgets, with habit rules in the model and storage/auth/backup work in separate services.
@@ -122,7 +123,7 @@ flutter test
 flutter analyze
 ```
 
-**Status for this update:** tests and analysis were not run. Flutter and Dart are not installed in the authoring workspace. The repository contains model tests for streaks and categories, and storage tests for save/load and older records. The newer backup, authentication, history, and widget interactions do not yet have dedicated test coverage.
+**Status for this update:** tests and analysis were not run. Flutter and Dart are not installed in the authoring workspace. The repository contains model tests for streaks and categories, storage tests for save/load and older records, and widget tests for category filtering. Backup, authentication, history editing, and other newer interactions do not yet have dedicated test coverage.
 
 ## Data and limitations
 
@@ -142,7 +143,7 @@ The feature branch contains **31 meaningful development commits** after the init
 | 1–5 | Corrected current streak behavior, added streak tests, normalized and validated habit data, and improved name validation and duplicate handling. |
 | 6–9 | Added habit editing, connected edit controls to the dashboard, and added deletion with undo. |
 | 10–15 | Added selectable categories, Firebase email/password authentication, local persistence, deletion feedback fixes, sign-in gating, and account-scoped local storage. |
-| 16–18 | Added category filtering, name search, and sorting by name or current streak. |
+| 16–18 | Added category filtering (with widget coverage), name search, and sorting by name or current streak. |
 | 19–23 | Added weekly completion goals, date-based history, recent-period rates, JSON backup/merge, and editing past completion dates. |
 | 24–29 | Added dashboard progress, habit archiving, saved dark theme, optional notes, screen-reader labels, and responsive layouts. |
 | 30–31 | Hardened calendar and streak date handling across daylight changes and protected saved data when local storage cannot be read. |
