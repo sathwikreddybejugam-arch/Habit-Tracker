@@ -143,6 +143,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
       HabitStorage(accountId: widget.user.uid);
   Future<void> _saveQueue = Future<void>.value();
   int _selectedTab = 0;
+  String _selectedCategory = 'All';
   bool _isLoading = true;
 
   @override
@@ -278,6 +279,56 @@ class _HabitHomePageState extends State<HabitHomePage> {
     }
   }
 
+  Widget _buildHabitsTab() {
+    if (habits.isEmpty) {
+      return const Center(child: Text('No habits yet. Tap + to add one.'));
+    }
+
+    final visibleHabits = _selectedCategory == 'All'
+        ? habits
+        : habits.where((habit) => habit.category == _selectedCategory).toList();
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 56,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            children: [
+              'All',
+              ...Habit.categories,
+            ].map((category) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(category),
+                  selected: _selectedCategory == category,
+                  onSelected: (_) =>
+                      setState(() => _selectedCategory = category),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        Expanded(
+          child: visibleHabits.isEmpty
+              ? Center(child: Text('No habits in $_selectedCategory yet.'))
+              : ListView(
+                  children: visibleHabits
+                      .map((habit) => HabitCard(
+                            habit: habit,
+                            onToggleToday: () => _toggleToday(habit),
+                            onDelete: () => _deleteHabit(habit),
+                            onEdit: () => _showEditHabitDialog(habit),
+                          ))
+                      .toList(),
+                ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -294,18 +345,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _selectedTab == 0
-              ? (habits.isEmpty
-                  ? const Center(child: Text('No habits yet. Tap + to add one.'))
-                  : ListView(
-                      children: habits
-                          .map((habit) => HabitCard(
-                                habit: habit,
-                                onToggleToday: () => _toggleToday(habit),
-                                onDelete: () => _deleteHabit(habit),
-                                onEdit: () => _showEditHabitDialog(habit),
-                              ))
-                          .toList(),
-                    ))
+              ? _buildHabitsTab()
               : StatsView(habits: habits),
       floatingActionButton: !_isLoading && _selectedTab == 0
           ? FloatingActionButton(
