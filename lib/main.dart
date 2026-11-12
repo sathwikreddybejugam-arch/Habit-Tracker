@@ -139,12 +139,20 @@ class HabitHomePage extends StatefulWidget {
 
 class _HabitHomePageState extends State<HabitHomePage> {
   final List<Habit> habits = [];
+  final TextEditingController _searchController = TextEditingController();
   late final HabitStorage _storage =
       HabitStorage(accountId: widget.user.uid);
   Future<void> _saveQueue = Future<void>.value();
   int _selectedTab = 0;
   String _selectedCategory = 'All';
+  String _searchQuery = '';
   bool _isLoading = true;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -284,12 +292,42 @@ class _HabitHomePageState extends State<HabitHomePage> {
       return const Center(child: Text('No habits yet. Tap + to add one.'));
     }
 
-    final visibleHabits = _selectedCategory == 'All'
+    final categoryHabits = _selectedCategory == 'All'
         ? habits
         : habits.where((habit) => habit.category == _selectedCategory).toList();
+    final normalizedQuery = _searchQuery.trim().toLowerCase();
+    final visibleHabits = normalizedQuery.isEmpty
+        ? categoryHabits
+        : categoryHabits
+            .where((habit) => habit.name.toLowerCase().contains(normalizedQuery))
+            .toList();
 
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) => setState(() => _searchQuery = value),
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'Search habits',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchQuery.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: 'Clear search',
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                      icon: const Icon(Icons.close),
+                    ),
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+        ),
         SizedBox(
           height: 56,
           child: ListView(
@@ -313,7 +351,11 @@ class _HabitHomePageState extends State<HabitHomePage> {
         ),
         Expanded(
           child: visibleHabits.isEmpty
-              ? Center(child: Text('No habits in $_selectedCategory yet.'))
+              ? Center(
+                  child: Text(normalizedQuery.isNotEmpty
+                      ? 'No habits match “$_searchQuery”.'
+                      : 'No habits in $_selectedCategory yet.'),
+                )
               : ListView(
                   children: visibleHabits
                       .map((habit) => HabitCard(
