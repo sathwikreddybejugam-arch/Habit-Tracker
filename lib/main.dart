@@ -146,6 +146,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
   int _selectedTab = 0;
   String _selectedCategory = 'All';
   String _searchQuery = '';
+  String _sortMode = 'name';
   bool _isLoading = true;
 
   @override
@@ -296,11 +297,14 @@ class _HabitHomePageState extends State<HabitHomePage> {
         ? habits
         : habits.where((habit) => habit.category == _selectedCategory).toList();
     final normalizedQuery = _searchQuery.trim().toLowerCase();
-    final visibleHabits = normalizedQuery.isEmpty
-        ? categoryHabits
+    final visibleHabits = (normalizedQuery.isEmpty
+        ? List<Habit>.from(categoryHabits)
         : categoryHabits
             .where((habit) => habit.name.toLowerCase().contains(normalizedQuery))
-            .toList();
+            .toList())
+      ..sort((a, b) => _sortMode == 'streak'
+          ? b.currentStreak.compareTo(a.currentStreak)
+          : a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     return Column(
       children: [
@@ -347,6 +351,23 @@ class _HabitHomePageState extends State<HabitHomePage> {
                 ),
               );
             }).toList(),
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: DropdownButton<String>(
+              value: _sortMode,
+              underline: const SizedBox.shrink(),
+              onChanged: (value) {
+                if (value != null) setState(() => _sortMode = value);
+              },
+              items: const [
+                DropdownMenuItem(value: 'name', child: Text('Name A–Z')),
+                DropdownMenuItem(value: 'streak', child: Text('Longest current streak')),
+              ],
+            ),
           ),
         ),
         Expanded(
