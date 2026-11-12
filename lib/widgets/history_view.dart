@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import '../models/habit.dart';
 
 class HistoryView extends StatefulWidget {
-  const HistoryView({super.key, required this.habits});
+  const HistoryView({
+    super.key,
+    required this.habits,
+    required this.onToggleCompletion,
+  });
 
   final List<Habit> habits;
+  final void Function(Habit, DateTime) onToggleCompletion;
 
   @override
   State<HistoryView> createState() => _HistoryViewState();
@@ -47,6 +52,12 @@ class _HistoryViewState extends State<HistoryView> {
                 leading: const Icon(Icons.check_circle, color: Colors.teal),
                 title: Text(habit.name),
                 subtitle: Text(habit.category),
+                trailing: IconButton(
+                  tooltip: 'Undo completion for ${habit.name}',
+                  onPressed: () =>
+                      widget.onToggleCompletion(habit, _selectedDate),
+                  icon: const Icon(Icons.undo),
+                ),
               )),
         if (incomplete.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -56,6 +67,12 @@ class _HistoryViewState extends State<HistoryView> {
                 leading: const Icon(Icons.circle_outlined),
                 title: Text(habit.name),
                 subtitle: Text(habit.category),
+                trailing: IconButton(
+                  tooltip: 'Mark ${habit.name} complete',
+                  onPressed: () =>
+                      widget.onToggleCompletion(habit, _selectedDate),
+                  icon: const Icon(Icons.check),
+                ),
               )),
         ],
       ],

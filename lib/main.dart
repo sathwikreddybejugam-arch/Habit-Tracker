@@ -267,6 +267,11 @@ class _HabitHomePageState extends State<HabitHomePage> {
     _saveHabits();
   }
 
+  void _toggleCompletionOnDate(Habit habit, DateTime date) {
+    setState(() => habit.toggleDate(date));
+    _saveHabits();
+  }
+
   void _showAddHabitDialog() {
     showDialog(
       context: context,
@@ -483,7 +488,10 @@ class _HabitHomePageState extends State<HabitHomePage> {
               ? _buildHabitsTab()
               : _selectedTab == 1
                   ? StatsView(habits: habits)
-                  : HistoryView(habits: habits),
+                  : HistoryView(
+                      habits: habits,
+                      onToggleCompletion: _toggleCompletionOnDate,
+                    ),
       floatingActionButton: !_isLoading && _selectedTab == 0
           ? FloatingActionButton(
               onPressed: _showAddHabitDialog,

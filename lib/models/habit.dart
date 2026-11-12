@@ -84,14 +84,17 @@ class Habit {
   }
 
   void toggleToday() {
-    final today = DateTime.now();
-    if (isDoneToday) {
+    toggleDate(DateTime.now());
+  }
+
+  void toggleDate(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    if (isDoneOn(day)) {
       completedDates.removeWhere((d) =>
-          d.year == today.year &&
-          d.month == today.month &&
-          d.day == today.day);
+          d.year == day.year && d.month == day.month && d.day == day.day);
     } else {
-      completedDates.add(DateTime(today.year, today.month, today.day));
+      completedDates.add(day);
+      completedDates.sort((a, b) => a.compareTo(b));
     }
   }
 
