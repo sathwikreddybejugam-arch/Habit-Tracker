@@ -41,9 +41,9 @@ class _HabitHomePageState extends State<HabitHomePage> {
 
   void _addHabit(Habit habit) {
     try {
-      final normalizedName = habit.name.toLowerCase();
+      final normalizedName = habit.name.trim().toLowerCase();
       final alreadyExists = habits.any(
-        (existing) => existing.name.toLowerCase() == normalizedName,
+        (existing) => existing.name.trim().toLowerCase() == normalizedName,
       );
 
       if (alreadyExists) {
@@ -58,6 +58,27 @@ class _HabitHomePageState extends State<HabitHomePage> {
     } catch (_) {
       _showMessage('Something went wrong while adding the habit.');
     }
+  }
+
+  void _updateHabit(Habit original, Habit updated) {
+    final normalizedName = updated.name.trim().toLowerCase();
+    final duplicateExists = habits.any((habit) =>
+        habit.id != original.id &&
+        habit.name.trim().toLowerCase() == normalizedName);
+
+    if (duplicateExists) {
+      _showMessage('Another habit already uses this name.');
+      return;
+    }
+
+    final index = habits.indexWhere((habit) => habit.id == original.id);
+    if (index == -1) {
+      _showMessage('This habit could not be found.');
+      return;
+    }
+
+    setState(() => habits[index] = updated);
+    _showMessage('Habit updated successfully.');
   }
 
   void _deleteHabit(Habit habit) {
@@ -75,6 +96,16 @@ class _HabitHomePageState extends State<HabitHomePage> {
     );
   }
 
+  void _showEditHabitDialog(Habit habit) {
+    showDialog(
+      context: context,
+      builder: (context) => AddHabitDialog(
+        initialHabit: habit,
+        onAdd: (updated) => _updateHabit(habit, updated),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,6 +119,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
                             habit: habit,
                             onToggleToday: () => _toggleToday(habit),
                             onDelete: () => _deleteHabit(habit),
+                            onEdit: () => _showEditHabitDialog(habit),
                           ))
                       .toList(),
                 ))

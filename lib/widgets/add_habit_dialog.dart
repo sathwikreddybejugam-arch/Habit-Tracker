@@ -3,8 +3,13 @@ import '../models/habit.dart';
 
 class AddHabitDialog extends StatefulWidget {
   final void Function(Habit) onAdd;
+  final Habit? initialHabit;
 
-  const AddHabitDialog({super.key, required this.onAdd});
+  const AddHabitDialog({
+    super.key,
+    required this.onAdd,
+    this.initialHabit,
+  });
 
   @override
   State<AddHabitDialog> createState() => _AddHabitDialogState();
@@ -12,8 +17,19 @@ class AddHabitDialog extends StatefulWidget {
 
 class _AddHabitDialogState extends State<AddHabitDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  String _frequency = 'daily';
+  late final TextEditingController _nameController;
+  late String _frequency;
+
+  bool get _isEditing => widget.initialHabit != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(
+      text: widget.initialHabit?.name ?? '',
+    );
+    _frequency = widget.initialHabit?.frequency ?? 'daily';
+  }
 
   @override
   void dispose() {
@@ -24,10 +40,14 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    final original = widget.initialHabit;
     widget.onAdd(Habit(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: original?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
       frequency: _frequency,
+      completedDates: original == null
+          ? []
+          : List<DateTime>.from(original.completedDates),
     ));
     Navigator.pop(context);
   }
@@ -35,7 +55,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('New Habit'),
+      title: Text(_isEditing ? 'Edit Habit' : 'New Habit'),
       content: Form(
         key: _formKey,
         child: Column(
@@ -85,7 +105,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
         ),
         FilledButton(
           onPressed: _submit,
-          child: const Text('Add habit'),
+          child: Text(_isEditing ? 'Save changes' : 'Add habit'),
         ),
       ],
     );

@@ -5,12 +5,14 @@ class HabitCard extends StatelessWidget {
   final Habit habit;
   final VoidCallback onToggleToday;
   final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
   const HabitCard({
     super.key,
     required this.habit,
     required this.onToggleToday,
     required this.onDelete,
+    required this.onEdit,
   });
 
   @override
@@ -35,6 +37,12 @@ class HabitCard extends StatelessWidget {
                 ),
                 Text('🔥 ${habit.currentStreak}'),
                 IconButton(
+                  tooltip: 'Edit habit',
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: onEdit,
+                ),
+                IconButton(
+                  tooltip: 'Delete habit',
                   icon: const Icon(Icons.delete_outline),
                   onPressed: onDelete,
                 ),
