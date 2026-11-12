@@ -201,6 +201,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
   String _sortMode = 'name';
   bool _showArchived = false;
   bool _isLoading = true;
+  bool _loadError = false;
 
   @override
   void dispose() {
@@ -215,6 +216,10 @@ class _HabitHomePageState extends State<HabitHomePage> {
   }
 
   Future<void> _loadHabits() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = false;
+    });
     try {
       final savedHabits = await _storage.loadHabits();
       if (!mounted) return;
@@ -223,15 +228,19 @@ class _HabitHomePageState extends State<HabitHomePage> {
           ..clear()
           ..addAll(savedHabits);
         _isLoading = false;
+        _loadError = false;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
-      _showMessage('Saved habits could not be loaded.');
+      setState(() {
+        _isLoading = false;
+        _loadError = true;
+      });
     }
   }
 
   void _saveHabits() {
+    if (_isLoading || _loadError) return;
     final snapshot = List<Habit>.from(habits);
     _saveQueue = _saveQueue
         .then((_) => _storage.saveHabits(snapshot))
@@ -538,6 +547,33 @@ class _HabitHomePageState extends State<HabitHomePage> {
     );
   }
 
+  Widget _buildStorageError() {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_outlined, size: 48),
+          const SizedBox(height: 12),
+          Text('Saved habits could not be loaded',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          const Text(
+            'Your saved data has been left untouched. Try loading it again before making changes.',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: _loadHabits,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try again'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -575,6 +611,8 @@ class _HabitHomePageState extends State<HabitHomePage> {
           constraints: const BoxConstraints(maxWidth: 760),
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
+              : _loadError
+                  ? _buildStorageError()
               : _selectedTab == 0
                   ? _buildHabitsTab()
                   : _selectedTab == 1

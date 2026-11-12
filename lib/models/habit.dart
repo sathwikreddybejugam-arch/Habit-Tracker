@@ -228,7 +228,8 @@ class Habit {
 
   static DateTime _weekStart(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
-    return day.subtract(Duration(days: day.weekday - DateTime.monday));
+    final daysSinceMonday = day.weekday - DateTime.monday;
+    return DateTime(day.year, day.month, day.day - daysSinceMonday);
   }
 
   Map<String, Object> toJson() => {
