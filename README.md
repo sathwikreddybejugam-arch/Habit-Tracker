@@ -1,74 +1,55 @@
 # Habit Tracker
 
-A simple Flutter habit tracker app. Add habits, mark them done each day,
-track streaks, and view a 7-day mini calendar plus a stats screen. Habits and
-their completion history are saved locally between app launches.
+A Flutter habit tracker for creating daily or weekly habits, recording completions, and reviewing streaks. Habits can be categorized and are saved locally between launches.
 
-## What's included
+## Current features
 
+- Create, edit, and delete habits, with a five-second undo action.
+- Set a daily or weekly frequency and choose a category.
+- Mark today's completion and view a rolling seven-day history.
+- Review current and longest streaks and a completion percentage.
+- Save habits and completion dates on the device with `shared_preferences`.
+
+## Project structure
+
+```text
+lib/
+  main.dart
+  models/habit.dart
+  services/habit_storage.dart
+  widgets/
+    add_habit_dialog.dart
+    habit_card.dart
+    stats_view.dart
+test/
+  models/habit_test.dart
+  services/habit_storage_test.dart
 ```
-habit_tracker/
-├── lib/
-│   ├── main.dart              # App entry point
-│   ├── models/
-│   │   └── habit.dart         # Habit model + streak logic
-│   └── widgets/
-│       ├── add_habit_dialog.dart
-│       ├── habit_card.dart
-│       └── stats_view.dart
-├── pubspec.yaml
-├── .gitignore
-└── README.md
-```
 
-Note: this only contains the Dart source (`lib/`) and `pubspec.yaml`.
-The `android/`, `ios/`, `web/` platform folders are **not** included —
-you'll generate them in step 1 below.
+## Setup
 
-## 1. Set up the project locally
-
-Unzip this folder, then open a terminal inside it and run:
+This repository currently contains Dart source files and does not include generated platform folders. With Flutter 3.16 or later installed, generate the platform folders if needed, then fetch packages and run:
 
 ```bash
 flutter create .
-```
-
-This generates the missing platform folders (android, ios, web, etc.)
-without touching your existing `lib/` and `pubspec.yaml`.
-
-Then fetch dependencies:
-
-```bash
 flutter pub get
-```
-
-## 2. Run it
-
-```bash
 flutter run
 ```
 
-Pick a connected device, emulator, or Chrome when prompted.
+## Tests
 
-## 3. Push to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial habit tracker app"
-```
-
-Create a new empty repo on [github.com](https://github.com) (no README,
-so it doesn't conflict), then:
+Run the Flutter test suite with:
 
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/habit_tracker.git
-git branch -M main
-git push -u origin main
+flutter test
 ```
 
-## Next steps / ideas
+Test status: not run in this workspace.
 
-- Add habit colors/icons
-- Weekly view instead of just 7-day
-- Notifications/reminders
+## Storage
+
+Habit records and completion dates are stored locally on the device using `shared_preferences`. Data is not synced between devices or backed up to a server. Clearing app data or uninstalling the app may remove saved habits.
+
+## Development history
+
+The development branch currently contains 11 meaningful development commits. The completed work covers streak calculation, validation, editing, deletion undo, categories, and local persistence. The remaining roadmap will be recorded here after implementation.
