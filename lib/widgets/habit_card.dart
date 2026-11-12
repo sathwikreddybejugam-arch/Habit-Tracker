@@ -82,12 +82,21 @@ class HabitCard extends StatelessWidget {
                     Text(_weekdayLabel(date.weekday),
                         style: const TextStyle(fontSize: 10)),
                     const SizedBox(height: 4),
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: done ? Colors.green : Colors.grey[300],
-                        shape: BoxShape.circle,
+                    Tooltip(
+                      message:
+                          '${MaterialLocalizations.of(context).formatMediumDate(date)}: ${done ? 'complete' : 'incomplete'}',
+                      child: Semantics(
+                        container: true,
+                        label:
+                            '${_weekdayLabel(date.weekday)} ${date.day}: ${done ? 'complete' : 'incomplete'}',
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: done ? Colors.green : Colors.grey[300],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -113,7 +122,7 @@ class HabitCard extends StatelessWidget {
   }
 
   String _weekdayLabel(int weekday) {
-    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return labels[weekday - 1];
   }
 }
