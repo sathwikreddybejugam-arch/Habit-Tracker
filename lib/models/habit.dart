@@ -178,7 +178,31 @@ class Habit {
 
   double completionRate(int totalDaysTracked) {
     if (totalDaysTracked <= 0) return 0;
-    return (completedDates.length / totalDaysTracked).clamp(0.0, 1.0);
+    return (completedDates.length / totalDaysTracked)
+        .clamp(0.0, 1.0)
+        .toDouble();
+  }
+
+  double completionRateForRecentPeriod([DateTime? date]) {
+    final today = date ?? DateTime.now();
+    if (frequency == 'weekly') {
+      final currentWeek = _weekStart(today);
+      var successfulWeeks = 0;
+      for (var offset = 0; offset < 4; offset++) {
+        final week = currentWeek.subtract(Duration(days: 7 * offset));
+        if (_completionsInWeek(week) >= weeklyTarget) successfulWeeks++;
+      }
+      return successfulWeeks / 4;
+    }
+
+    final end = DateTime(today.year, today.month, today.day)
+        .add(const Duration(days: 1));
+    final start = end.subtract(const Duration(days: 30));
+    final completions = completedDates
+        .where((completion) =>
+            !completion.isBefore(start) && completion.isBefore(end))
+        .length;
+    return completions / 30;
   }
 
   int _completionsInWeek(DateTime weekStart) {
