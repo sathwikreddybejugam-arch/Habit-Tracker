@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 import 'models/habit.dart';
@@ -31,19 +32,57 @@ Future<void> main() async {
   runApp(HabitTrackerApp(firebaseError: firebaseError));
 }
 
-class HabitTrackerApp extends StatelessWidget {
+class HabitTrackerApp extends StatefulWidget {
   const HabitTrackerApp({super.key, this.firebaseError});
 
   final Object? firebaseError;
+
+  @override
+  State<HabitTrackerApp> createState() => _HabitTrackerAppState();
+}
+
+class _HabitTrackerAppState extends State<HabitTrackerApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() => _themeMode = preferences.getBool('darkTheme') == true
+        ? ThemeMode.dark
+        : ThemeMode.light);
+  }
+
+  Future<void> _toggleTheme() async {
+    final nextMode = _themeMode == ThemeMode.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
+    setState(() => _themeMode = nextMode);
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool('darkTheme', nextMode == ThemeMode.dark);
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Habit Tracker',
       theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
-      home: firebaseError == null
-          ? const AuthGate()
-          : FirebaseSetupScreen(error: firebaseError!),
+      darkTheme: ThemeData(
+          colorSchemeSeed: Colors.teal,
+          brightness: Brightness.dark,
+          useMaterial3: true),
+      themeMode: _themeMode,
+      home: widget.firebaseError == null
+          ? AuthGate(
+              isDarkMode: _themeMode == ThemeMode.dark,
+              onToggleTheme: _toggleTheme,
+            )
+          : FirebaseSetupScreen(error: widget.firebaseError!),
     );
   }
 }
@@ -94,7 +133,10 @@ class FirebaseSetupScreen extends StatelessWidget {
 }
 
 class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
+  const AuthGate({super.key, required this.isDarkMode, required this.onToggleTheme});
+
+  final bool isDarkMode;
+  final VoidCallback onToggleTheme;
 
   static final AuthService _authService = AuthService();
 
@@ -120,6 +162,8 @@ class AuthGate extends StatelessWidget {
           key: ValueKey(user.uid),
           user: user,
           authService: _authService,
+          isDarkMode: isDarkMode,
+          onToggleTheme: onToggleTheme,
         );
       },
     );
@@ -131,10 +175,14 @@ class HabitHomePage extends StatefulWidget {
     super.key,
     required this.user,
     required this.authService,
+    required this.isDarkMode,
+    required this.onToggleTheme,
   });
 
   final User user;
   final AuthService authService;
+  final bool isDarkMode;
+  final VoidCallback onToggleTheme;
 
   @override
   State<HabitHomePage> createState() => _HabitHomePageState();
@@ -329,6 +377,11 @@ class _HabitHomePageState extends State<HabitHomePage> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: isDarkMode ? 'Use light theme' : 'Use dark theme',
+            onPressed: onToggleTheme,
+            icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
