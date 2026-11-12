@@ -1,28 +1,136 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+
+import 'firebase_options.dart';
 import 'models/habit.dart';
+import 'screens/auth_screen.dart';
+import 'services/auth_service.dart';
 import 'widgets/add_habit_dialog.dart';
 import 'widgets/habit_card.dart';
 import 'widgets/stats_view.dart';
 
-void main() {
-  runApp(const HabitTrackerApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  Object? firebaseError;
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error) {
+    firebaseError = error;
+  }
+
+  runApp(HabitTrackerApp(firebaseError: firebaseError));
 }
 
 class HabitTrackerApp extends StatelessWidget {
-  const HabitTrackerApp({super.key});
+  const HabitTrackerApp({super.key, this.firebaseError});
+
+  final Object? firebaseError;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Habit Tracker',
       theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
-      home: const HabitHomePage(),
+      home: firebaseError == null
+          ? const AuthGate()
+          : FirebaseSetupScreen(error: firebaseError!),
+    );
+  }
+}
+
+class FirebaseSetupScreen extends StatelessWidget {
+  const FirebaseSetupScreen({super.key, required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.settings_outlined, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Firebase setup required',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Create or select a Firebase project, then follow the setup steps in README.md and run flutterfire configure.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  error.toString(),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  static final AuthService _authService = AuthService();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: _authService.authStateChanges,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const Scaffold(
+            body: Center(child: Text('Unable to check sign-in status.')),
+          );
+        }
+
+        final user = snapshot.data;
+        if (user == null) {
+          return AuthScreen(authService: _authService);
+        }
+
+        return HabitHomePage(
+          key: ValueKey(user.uid),
+          user: user,
+          authService: _authService,
+        );
+      },
     );
   }
 }
 
 class HabitHomePage extends StatefulWidget {
-  const HabitHomePage({super.key});
+  const HabitHomePage({
+    super.key,
+    required this.user,
+    required this.authService,
+  });
+
+  final User user;
+  final AuthService authService;
 
   @override
   State<HabitHomePage> createState() => _HabitHomePageState();
@@ -92,7 +200,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('" + "'${habit.name}'" + " deleted.'),
+          content: Text('" ${habit.name} " deleted.'),
           duration: const Duration(seconds: 5),
           action: SnackBarAction(
             label: 'UNDO',
@@ -131,10 +239,27 @@ class _HabitHomePageState extends State<HabitHomePage> {
     );
   }
 
+  Future<void> _signOut() async {
+    try {
+      await widget.authService.signOut();
+    } on FirebaseAuthException {
+      _showMessage('Unable to sign out. Please try again.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Habit Tracker')),
+      appBar: AppBar(
+        title: const Text('Habit Tracker'),
+        actions: [
+          IconButton(
+            tooltip: 'Sign out ${widget.user.email ?? ''}',
+            onPressed: _signOut,
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
       body: _selectedTab == 0
           ? (habits.isEmpty
               ? const Center(child: Text('No habits yet. Tap + to add one.'))
