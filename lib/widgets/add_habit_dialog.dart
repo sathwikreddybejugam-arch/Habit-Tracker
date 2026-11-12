@@ -68,11 +68,12 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(_isEditing ? 'Edit Habit' : 'New Habit'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             TextFormField(
               controller: _nameController,
               autofocus: true,
@@ -151,7 +152,8 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
               onChanged: (value) =>
                   setState(() => _category = value ?? 'Other'),
             ),
-          ],
+            ],
+          ),
         ),
       ),
       actions: [

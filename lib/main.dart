@@ -570,16 +570,21 @@ class _HabitHomePageState extends State<HabitHomePage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _selectedTab == 0
-              ? _buildHabitsTab()
-              : _selectedTab == 1
-                  ? StatsView(habits: habits)
-                  : HistoryView(
-                      habits: habits,
-                      onToggleCompletion: _toggleCompletionOnDate,
-                    ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _selectedTab == 0
+                  ? _buildHabitsTab()
+                  : _selectedTab == 1
+                      ? StatsView(habits: habits)
+                      : HistoryView(
+                          habits: habits,
+                          onToggleCompletion: _toggleCompletionOnDate,
+                        ),
+        ),
+      ),
       floatingActionButton: !_isLoading && _selectedTab == 0 && !_showArchived
           ? FloatingActionButton(
               onPressed: _showAddHabitDialog,
