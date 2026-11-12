@@ -136,7 +136,7 @@ flutter analyze
 
 ## Development history
 
-The feature branch contains **31 meaningful development commits** after the initial repository commit. Merge and branch-sync commits are excluded from this count.
+The planned **31 meaningful development commits** are complete. PR review added two follow-up fixes for safe legacy-data migration and clearer mixed-frequency stats. Merge, branch-sync, and README commits are not included in the 31-step count.
 
 | Commits | Work completed |
 | --- | --- |
@@ -147,6 +147,7 @@ The feature branch contains **31 meaningful development commits** after the init
 | 19–23 | Added weekly completion goals, date-based history, recent-period rates, JSON backup/merge, and editing past completion dates. |
 | 24–29 | Added dashboard progress, habit archiving, saved dark theme, optional notes, screen-reader labels, and responsive layouts. |
 | 30–31 | Hardened calendar and streak date handling across daylight changes and protected saved data when local storage cannot be read. |
+| Review fixes | Validate legacy records before migrating them and replace an incomparable daily/weekly streak summary with an archived-habit count. |
 
 ## Possible next steps
 
