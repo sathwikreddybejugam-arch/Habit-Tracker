@@ -36,6 +36,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
   final HabitStorage _storage = HabitStorage();
   Future<void> _saveQueue = Future<void>.value();
   int _selectedTab = 0;
+  String _selectedCategory = 'All';
   bool _isLoading = true;
 
   @override
@@ -132,7 +133,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('" + "'${habit.name}'" + " deleted.'),
+          content: Text("'${habit.name}' deleted."),
           duration: const Duration(seconds: 5),
           action: SnackBarAction(
             label: 'UNDO',
@@ -175,6 +176,10 @@ class _HabitHomePageState extends State<HabitHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final visibleHabits = _selectedCategory == 'All'
+        ? habits
+        : habits.where((habit) => habit.category == _selectedCategory).toList();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Habit Tracker')),
       body: _isLoading
@@ -183,14 +188,47 @@ class _HabitHomePageState extends State<HabitHomePage> {
           ? (habits.isEmpty
               ? const Center(child: Text('No habits yet. Tap + to add one.'))
               : ListView(
-                  children: habits
-                      .map((habit) => HabitCard(
-                            habit: habit,
-                            onToggleToday: () => _toggleToday(habit),
-                            onDelete: () => _deleteHabit(habit),
-                            onEdit: () => _showEditHabitDialog(habit),
-                          ))
-                      .toList(),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: DropdownButtonFormField<String>(
+                        key: const ValueKey('habit-category-filter'),
+                        value: _selectedCategory,
+                        decoration: const InputDecoration(
+                          labelText: 'Show category',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: 'All',
+                            child: Text('All categories'),
+                          ),
+                          ...Habit.categories.map((category) =>
+                              DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              )),
+                        ],
+                        onChanged: (category) => setState(() {
+                          _selectedCategory = category ?? 'All';
+                        }),
+                      ),
+                    ),
+                    if (visibleHabits.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(
+                          child: Text('No habits in this category yet.'),
+                        ),
+                      ),
+                    ...visibleHabits.map((habit) => HabitCard(
+                          habit: habit,
+                          onToggleToday: () => _toggleToday(habit),
+                          onDelete: () => _deleteHabit(habit),
+                          onEdit: () => _showEditHabitDialog(habit),
+                        )),
+                  ],
                 ))
           : StatsView(habits: habits),
       floatingActionButton: !_isLoading && _selectedTab == 0
