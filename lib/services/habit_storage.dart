@@ -21,9 +21,10 @@ class HabitStorage {
       if (accountId == null) return [];
       final legacyHabits = preferences.getString('habits');
       if (legacyHabits == null) return [];
+      final decodedHabits = _decodeHabits(legacyHabits);
       await preferences.setString(_storageKey, legacyHabits);
       await preferences.remove('habits');
-      return _decodeHabits(legacyHabits);
+      return decodedHabits;
     }
 
     return _decodeHabits(encodedHabits);
