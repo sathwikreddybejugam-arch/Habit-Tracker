@@ -82,7 +82,7 @@ class Habit {
 
   int completionsThisWeek([DateTime? date]) {
     final start = _weekStart(date ?? DateTime.now());
-    final end = start.add(const Duration(days: 7));
+    final end = DateTime(start.year, start.month, start.day + 7);
     return completedDates
         .where((completion) => !completion.isBefore(start) && completion.isBefore(end))
         .length;
@@ -107,12 +107,12 @@ class Habit {
     if (frequency == 'weekly') {
       var week = _weekStart(DateTime.now());
       if (_completionsInWeek(week) < weeklyTarget) {
-        week = week.subtract(const Duration(days: 7));
+        week = _weekStart(week.subtract(const Duration(days: 7)));
       }
       var weeks = 0;
       while (_completionsInWeek(week) >= weeklyTarget) {
         weeks++;
-        week = week.subtract(const Duration(days: 7));
+        week = _weekStart(week.subtract(const Duration(days: 7)));
       }
       return weeks;
     }
@@ -123,13 +123,13 @@ class Habit {
     var day = DateTime(today.year, today.month, today.day);
 
     if (!isDoneOn(day)) {
-      day = day.subtract(const Duration(days: 1));
+      day = DateTime(day.year, day.month, day.day - 1);
     }
 
     var streak = 0;
     while (isDoneOn(day)) {
       streak++;
-      day = day.subtract(const Duration(days: 1));
+      day = DateTime(day.year, day.month, day.day - 1);
     }
     return streak;
   }
@@ -151,8 +151,12 @@ class Habit {
         if (completionsByWeek[week]! < weeklyTarget) {
           current = 0;
         } else {
+          final weekOrdinal = DateTime.utc(week.year, week.month, week.day);
+          final previousOrdinal = previous == null
+              ? null
+              : DateTime.utc(previous.year, previous.month, previous.day);
           current = previous != null &&
-                  week.difference(previous).inDays == 7 &&
+                  weekOrdinal.difference(previousOrdinal!).inDays == 7 &&
                   completionsByWeek[previous]! >= weeklyTarget
               ? current + 1
               : 1;
@@ -197,7 +201,8 @@ class Habit {
       final currentWeek = _weekStart(today);
       var successfulWeeks = 0;
       for (var offset = 0; offset < 4; offset++) {
-        final week = currentWeek.subtract(Duration(days: 7 * offset));
+        final week = _weekStart(
+            currentWeek.subtract(Duration(days: 7 * offset)));
         if (_completionsInWeek(week) >= weeklyTarget) successfulWeeks++;
       }
       return successfulWeeks / 4;
@@ -214,7 +219,7 @@ class Habit {
   }
 
   int _completionsInWeek(DateTime weekStart) {
-    final weekEnd = weekStart.add(const Duration(days: 7));
+    final weekEnd = DateTime(weekStart.year, weekStart.month, weekStart.day + 7);
     return completedDates
         .where((completion) =>
             !completion.isBefore(weekStart) && completion.isBefore(weekEnd))
