@@ -19,6 +19,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late String _frequency;
+  late String _category;
 
   bool get _isEditing => widget.initialHabit != null;
 
@@ -29,6 +30,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
       text: widget.initialHabit?.name ?? '',
     );
     _frequency = widget.initialHabit?.frequency ?? 'daily';
+    _category = widget.initialHabit?.category ?? 'Other';
   }
 
   @override
@@ -45,6 +47,7 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
       id: original?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
       frequency: _frequency,
+      category: _category,
       completedDates: original == null
           ? []
           : List<DateTime>.from(original.completedDates),
@@ -94,6 +97,22 @@ class _AddHabitDialogState extends State<AddHabitDialog> {
               ],
               onChanged: (val) =>
                   setState(() => _frequency = val ?? 'daily'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _category,
+              decoration: const InputDecoration(
+                labelText: 'Category',
+                border: OutlineInputBorder(),
+              ),
+              items: Habit.categories
+                  .map((category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      ))
+                  .toList(),
+              onChanged: (value) =>
+                  setState(() => _category = value ?? 'Other'),
             ),
           ],
         ),

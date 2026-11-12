@@ -48,6 +48,12 @@ class HabitCard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 4),
+            Chip(
+              label: Text(habit.category),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
