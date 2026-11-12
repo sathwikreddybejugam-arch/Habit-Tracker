@@ -356,6 +356,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
       return const Center(child: Text('No habits yet. Tap + to add one.'));
     }
 
+    final completedToday = habits.where((habit) => habit.isDoneToday).length;
     final categoryHabits = _selectedCategory == 'All'
         ? habits
         : habits.where((habit) => habit.category == _selectedCategory).toList();
@@ -371,6 +372,17 @@ class _HabitHomePageState extends State<HabitHomePage> {
 
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text("Today's progress · $completedToday of ${habits.length}"),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(value: completedToday / habits.length),
+            ],
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
           child: TextField(
