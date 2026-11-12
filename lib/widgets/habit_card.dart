@@ -3,9 +3,10 @@ import '../models/habit.dart';
 
 class HabitCard extends StatelessWidget {
   final Habit habit;
-  final VoidCallback onToggleToday;
+  final VoidCallback? onToggleToday;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
+  final VoidCallback onArchive;
 
   const HabitCard({
     super.key,
@@ -13,6 +14,7 @@ class HabitCard extends StatelessWidget {
     required this.onToggleToday,
     required this.onDelete,
     required this.onEdit,
+    required this.onArchive,
   });
 
   @override
@@ -46,6 +48,13 @@ class HabitCard extends StatelessWidget {
                   tooltip: 'Delete habit',
                   icon: const Icon(Icons.delete_outline),
                   onPressed: onDelete,
+                ),
+                IconButton(
+                  tooltip: habit.isArchived ? 'Restore habit' : 'Archive habit',
+                  icon: Icon(habit.isArchived
+                      ? Icons.unarchive_outlined
+                      : Icons.archive_outlined),
+                  onPressed: onArchive,
                 ),
               ],
             ),

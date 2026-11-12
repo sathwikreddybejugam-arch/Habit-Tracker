@@ -13,6 +13,7 @@ class Habit {
   final String frequency; // 'daily' or 'weekly'
   final String category;
   final int weeklyTarget;
+  bool isArchived;
   List<DateTime> completedDates;
 
   Habit({
@@ -21,6 +22,7 @@ class Habit {
     required String frequency,
     this.category = 'Other',
     int? weeklyTarget,
+    this.isArchived = false,
     List<DateTime>? completedDates,
   })  : id = id.trim(),
         name = name.trim(),
@@ -227,6 +229,7 @@ class Habit {
         'frequency': frequency,
         'category': category,
         'weeklyTarget': weeklyTarget,
+        'isArchived': isArchived,
         'completedDates':
             completedDates.map((date) => date.toIso8601String()).toList(),
       };
@@ -239,6 +242,7 @@ class Habit {
       frequency: json['frequency'] as String,
       category: json['category'] as String? ?? 'Other',
       weeklyTarget: json['weeklyTarget'] as int? ?? 1,
+      isArchived: json['isArchived'] as bool? ?? false,
       completedDates: rawDates
           .map((date) => DateTime.parse(date as String))
           .toList(),

@@ -151,6 +151,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
   String _selectedCategory = 'All';
   String _searchQuery = '';
   String _sortMode = 'name';
+  bool _showArchived = false;
   bool _isLoading = true;
 
   @override
@@ -272,6 +273,12 @@ class _HabitHomePageState extends State<HabitHomePage> {
     _saveHabits();
   }
 
+  void _toggleArchive(Habit habit) {
+    setState(() => habit.isArchived = !habit.isArchived);
+    _saveHabits();
+    _showMessage(habit.isArchived ? 'Habit archived.' : 'Habit restored.');
+  }
+
   void _showAddHabitDialog() {
     showDialog(
       context: context,
@@ -352,14 +359,22 @@ class _HabitHomePageState extends State<HabitHomePage> {
   }
 
   Widget _buildHabitsTab() {
-    if (habits.isEmpty) {
+    final activeHabits = habits
+        .where((habit) => habit.isArchived == _showArchived)
+        .toList();
+    if (activeHabits.isEmpty) {
+      if (_showArchived) {
+        return const Center(child: Text('No archived habits.'));
+      }
       return const Center(child: Text('No habits yet. Tap + to add one.'));
     }
 
-    final completedToday = habits.where((habit) => habit.isDoneToday).length;
+    final completedToday = activeHabits.where((habit) => habit.isDoneToday).length;
     final categoryHabits = _selectedCategory == 'All'
-        ? habits
-        : habits.where((habit) => habit.category == _selectedCategory).toList();
+        ? activeHabits
+        : activeHabits
+            .where((habit) => habit.category == _selectedCategory)
+            .toList();
     final normalizedQuery = _searchQuery.trim().toLowerCase();
     final visibleHabits = (normalizedQuery.isEmpty
         ? List<Habit>.from(categoryHabits)
@@ -456,9 +471,12 @@ class _HabitHomePageState extends State<HabitHomePage> {
                   children: visibleHabits
                       .map((habit) => HabitCard(
                             habit: habit,
-                            onToggleToday: () => _toggleToday(habit),
+                            onToggleToday: habit.isArchived
+                                ? null
+                                : () => _toggleToday(habit),
                             onDelete: () => _deleteHabit(habit),
                             onEdit: () => _showEditHabitDialog(habit),
+                            onArchive: () => _toggleArchive(habit),
                           ))
                       .toList(),
                 ),
@@ -473,6 +491,11 @@ class _HabitHomePageState extends State<HabitHomePage> {
       appBar: AppBar(
         title: const Text('Habit Tracker'),
         actions: [
+          IconButton(
+            tooltip: _showArchived ? 'Show active habits' : 'Show archived habits',
+            onPressed: () => setState(() => _showArchived = !_showArchived),
+            icon: Icon(_showArchived ? Icons.checklist : Icons.archive_outlined),
+          ),
           PopupMenuButton<String>(
             tooltip: 'Backup and restore',
             onSelected: (action) {
@@ -504,7 +527,7 @@ class _HabitHomePageState extends State<HabitHomePage> {
                       habits: habits,
                       onToggleCompletion: _toggleCompletionOnDate,
                     ),
-      floatingActionButton: !_isLoading && _selectedTab == 0
+      floatingActionButton: !_isLoading && _selectedTab == 0 && !_showArchived
           ? FloatingActionButton(
               onPressed: _showAddHabitDialog,
               child: const Icon(Icons.add),
