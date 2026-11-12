@@ -139,7 +139,8 @@ class HabitHomePage extends StatefulWidget {
 
 class _HabitHomePageState extends State<HabitHomePage> {
   final List<Habit> habits = [];
-  final HabitStorage _storage = HabitStorage();
+  late final HabitStorage _storage =
+      HabitStorage(accountId: widget.user.uid);
   Future<void> _saveQueue = Future<void>.value();
   int _selectedTab = 0;
   bool _isLoading = true;
